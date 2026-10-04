@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UPI QR Code Generator - Instant & Simple</title>
+  <meta name="description" content="Generate instant, scannable UPI QR codes for any UPI ID with payee name, optional amount, and instant download or print standee.">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="logo-area">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7"></rect>
+            <rect x="14" y="3" width="7" height="7"></rect>
+            <rect x="14" y="14" width="7" height="7"></rect>
+            <rect x="3" y="14" width="7" height="7"></rect>
+            <path d="M7 17h.01"></path>
+            <path d="M17 17h.01"></path>
+            <path d="M7 7h.01"></path>
+            <path d="M17 7h.01"></path>
+          </svg>
+        </div>
+        <div>
+          <h1>UPI QR Generator</h1>
+          <p class="subtitle">Generate clean, scannable UPI QR codes with payee name</p>
+        </div>
+      </div>
+      <div class="header-badges">
+        <span class="pill-badge">Zero Cost</span>
+        <span class="pill-badge pill-badge-green">Instant & Offline</span>
+      </div>
+    </header>
+
+    <!-- Main Content Layout -->
+    <main class="main-layout">
+      <!-- Left: Input Form Panel -->
+      <section class="card form-panel">
+        <div class="panel-header">
+          <h2>Enter Payment Details</h2>
+          <p>Fill in the UPI ID to instantly generate the QR code.</p>
+        </div>
+
+        <form id="upiForm" autocomplete="off" onsubmit="event.preventDefault();">
+          <!-- UPI ID Input -->
+          <div class="form-group">
+            <div class="label-row">
+              <label for="upiId">UPI ID / VPA <span class="required">*</span></label>
+              <span id="bankBadge" class="bank-badge hidden"></span>
+            </div>
+            <div class="input-wrapper">
+              <span class="input-icon">@</span>
+              <input 
+                type="text" 
+                id="upiId" 
+                name="upiId"
+                placeholder="e.g. 9876543210@paytm or name@okaxis" 
+                required 
+                spellcheck="false"
+                autocapitalize="off"
+                autofocus
+              >
+            </div>
+            <div class="helper-text" id="upiIdHelper">
+              Standard UPI format: <code>username@bankhandle</code>
+            </div>
+          </div>
+
+          <!-- Payee Name Input -->
+          <div class="form-group">
+            <div class="label-row">
+              <label for="payeeName">Payee Name <span class="badge-hint">As in UPI / Bank records</span></label>
+              <button type="button" class="btn-text-info" id="openNameInfoBtn" title="How does UPI verify names?">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="16" x2="12" y2="12"></line>
+                  <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                Why enter name?
+              </button>
+            </div>
+            <div class="input-wrapper">
+              <span class="input-icon">👤</span>
+              <input 
+                type="text" 
+                id="payeeName" 
+                name="payeeName"
+                placeholder="e.g. Your Name or Business Name" 
+                spellcheck="false"
+              >
+            </div>
+            <div class="helper-text">
+              Name displayed on the QR standee and passed in the official UPI payload (<code>&pn=</code>).
+            </div>
+          </div>
+
+          <!-- Collapsible Optional Details -->
+          <details class="accordion-details" id="moreOptionsDetails">
+            <summary class="accordion-summary">
+              <span>Optional: Set Fixed Amount & Transaction Note</span>
+              <svg class="chevron-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </summary>
+            
+            <div class="accordion-body">
+              <!-- Amount -->
+              <div class="form-group">
+                <label for="amount">Amount (INR ₹) <span class="optional-tag">Optional</span></label>
+                <div class="input-wrapper">
+                  <span class="input-icon">₹</span>
+                  <input 
+                    type="number" 
+                    id="amount" 
+                    name="amount" 
+                    min="1" 
+                    max="100000" 
+                    step="0.01"
+                    placeholder="Leave blank for any amount"
+                  >
+                </div>
+                <!-- Amount Quick Chips -->
+                <div class="amount-chips">
+                  <button type="button" class="amount-chip" data-amount="100">₹100</button>
+                  <button type="button" class="amount-chip" data-amount="250">₹250</button>
+                  <button type="button" class="amount-chip" data-amount="500">₹500</button>
+                  <button type="button" class="amount-chip" data-amount="1000">₹1,000</button>
+                  <button type="button" class="amount-chip clear-chip" id="clearAmountBtn">Clear</button>
+                </div>
+              </div>
+
+              <!-- Transaction Note -->
+              <div class="form-group">
+                <label for="txnNote">Transaction Note / Purpose <span class="optional-tag">Optional</span></label>
+                <div class="input-wrapper">
+                  <span class="input-icon">📝</span>
+                  <input 
+                    type="text" 
+                    id="txnNote" 
+                    name="txnNote" 
+                    maxlength="50"
+                    placeholder="e.g. Payment for Order #104"
+                  >
+                </div>
+              </div>
+            </div>
+          </details>
+
+          <!-- Form Buttons -->
+          <div class="form-actions">
+            <button type="button" id="generateBtn" class="btn btn-primary">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                <polyline points="16 3 21 8 16 13"></polyline>
+              </svg>
+              Update QR Code
+            </button>
+            <button type="button" id="resetBtn" class="btn btn-secondary">
+              Reset
+            </button>
+          </div>
+        </form>
+
+        <!-- Information Notice regarding Bank Records Verification -->
+        <div class="info-card">
+          <div class="info-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+          </div>
+          <div class="info-content">
+            <h4>How UPI Bank Records Verification Works:</h4>
+            <p>
+              Under NPCI & Reserve Bank of India (RBI) regulations, bank holder records are protected for financial privacy. When any payer scans this QR code in <strong>Google Pay, PhonePe, Paytm, or BHIM</strong>, their app automatically queries NPCI servers in real-time to match and confirm the official bank account holder name before any money is transferred.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right: Live QR Preview & Standee Panel -->
+      <section class="card preview-panel">
+        <div class="panel-header">
+          <h2>Live QR Code Preview</h2>
+          <p>Scan with any UPI app on Android or iOS</p>
+        </div>
+
+        <!-- The Printable / Displayable Payment Standee Card -->
+        <div class="standee-wrapper">
+          <div class="standee-card" id="standeeCard">
+            <!-- Standee Header -->
+            <div class="standee-top">
+              <div class="standee-upi-brand">
+                <!-- UPI Logo Representation -->
+                <div class="upi-mark">
+                  <span class="upi-bold">UPI</span>
+                  <span class="upi-sub">UNIFIED PAYMENTS INTERFACE</span>
+                </div>
+                <div class="bharat-qr-tag">BHARAT QR</div>
+              </div>
+              <div class="scan-instruction">
+                <span>SCAN &amp; PAY</span>
+                <span class="apps-hint">USING ANY UPI APP</span>
+              </div>
+            </div>
+
+            <!-- Standee QR Canvas Area -->
+            <div class="standee-qr-frame">
+              <div id="qrcodeContainer" class="qrcode-box">
+                <!-- QR code generated here -->
+              </div>
+              <div id="qrLoadingState" class="qr-loading-state hidden">
+                <div class="spinner"></div>
+                <span>Generating code...</span>
+              </div>
+            </div>
+
+            <!-- Standee Payee Details -->
+            <div class="standee-details">
+              <div class="standee-name" id="previewPayeeName">Payee Name</div>
+              <div class="standee-vpa-row">
+                <span class="vpa-text" id="previewUpiId">yourname@bank</span>
+                <button type="button" class="btn-copy-vpa" id="copyVpaBtn" title="Copy UPI ID">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                  </svg>
+                </button>
+              </div>
+
+              <div class="standee-amount-tag hidden" id="previewAmountTag">
+                Amount: <strong id="previewAmountText">₹0.00</strong>
+              </div>
+
+              <div class="standee-note-tag hidden" id="previewNoteTag">
+                Note: <span id="previewNoteText"></span>
+              </div>
+            </div>
+
+            <!-- Standee Supported Apps Footer -->
+            <div class="standee-footer">
+              <div class="supported-text">ACCEPTED HERE</div>
+              <div class="app-badges-row">
+                <span class="app-chip gpay-chip">GPay</span>
+                <span class="app-chip phonepe-chip">PhonePe</span>
+                <span class="app-chip paytm-chip">Paytm</span>
+                <span class="app-chip bhim-chip">BHIM</span>
+                <span class="app-chip cred-chip">CRED</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="preview-actions">
+          <button type="button" class="btn btn-action btn-download" id="downloadQrBtn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Download QR (PNG)
+          </button>
+
+          <button type="button" class="btn btn-action btn-print" id="printStandeeBtn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 6 2 18 2 18 9"></polyline>
+              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+              <rect x="6" y="14" width="12" height="8"></rect>
+            </svg>
+            Print Standee
+          </button>
+
+          <button type="button" class="btn btn-action btn-copy-link" id="copyLinkBtn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+            </svg>
+            Copy UPI Link
+          </button>
+
+          <a href="#" id="openIntentLink" class="btn btn-action btn-intent" target="_blank" rel="noopener">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+              <line x1="12" y1="18" x2="12.01" y2="18"></line>
+            </svg>
+            Pay on Mobile
+          </a>
+        </div>
+
+        <!-- Raw URI Preview -->
+        <div class="raw-uri-container">
+          <span class="raw-uri-label">UPI URI Payload:</span>
+          <code id="rawUriText">upi://pay?pa=...</code>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <p>Standard NPCI UPI 2.0 Compliant • Client-Side & Private • No data sent to external servers</p>
+    </footer>
+  </div>
+
+  <!-- Modal for Name Verification Details -->
+  <dialog class="modal-dialog" id="nameInfoModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>How UPI Name Verification Works</h3>
+        <button type="button" class="modal-close-btn" id="closeNameInfoBtn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p><strong>1. Why doesn't any website fetch the bank name automatically?</strong></p>
+        <p>
+          NPCI (National Payments Corporation of India) strictly limits direct banking name lookups to authorized, KYC-verified banks and payment gateways. Public websites are intentionally prevented from querying anyone's private bank account records by UPI ID alone to prevent stalking, data harvesting, and fraud.
+        </p>
+
+        <p><strong>2. How does the payer see your verified bank name?</strong></p>
+        <p>
+          When the payer scans this QR code in <strong>Google Pay, PhonePe, Paytm, BHIM, Amazon Pay</strong> or any bank app, their app queries NPCI in real-time and shows your <em>official verified bank account holder name</em> before allowing them to enter their UPI PIN.
+        </p>
+
+        <p><strong>3. What does entering your name here do?</strong></p>
+        <p>
+          Entering your name here embeds it inside the standard UPI specification parameter (<code>&pn=Your+Name</code>) and prints it neatly on your payment standee so the payer can easily verify who they are paying.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" id="gotItBtn">Got it</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast hidden"></div>
+
+  <!-- Local Standalone QRCode Library -->
+  <script src="qrcode.min.js"></script>
+  <!-- Application Logic -->
+  <script src="script.js"></script>
+</body>
+</html>
