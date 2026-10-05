@@ -75,10 +75,24 @@ body {
 
 /* Input Form */
 .input-form {
-  display: flex;
-  gap: 8px;
   margin-bottom: 22px;
   width: 100%;
+}
+
+.form-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 10px;
+  width: 100%;
+}
+
+@media (min-width: 420px) {
+  .form-inputs {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 10px;
+  }
 }
 
 .sr-only {
@@ -100,13 +114,33 @@ body {
   flex: 1;
 }
 
+.amount-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.currency-prefix {
+  position: absolute;
+  left: 14px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  pointer-events: none;
+}
+
+.amount-box input {
+  padding-left: 28px !important;
+}
+
 .btn-generate {
+  width: 100%;
   background: var(--primary-btn);
   color: #ffffff;
   font-family: inherit;
-  font-size: 0.9rem;
+  font-size: 0.92rem;
   font-weight: 600;
-  padding: 0 16px;
+  padding: 12px 18px;
   border-radius: var(--radius-input);
   border: none;
   cursor: pointer;
@@ -225,6 +259,23 @@ body {
   border-radius: 8px;
 }
 
+.upi-info-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.amount-badge {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #047857;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
 #upiText {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 0.85rem;
@@ -251,55 +302,42 @@ body {
   background: #e2e8f0;
 }
 
-/* Action Buttons */
+/* Action Button */
 .actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  width: 100%;
 }
 
-.btn {
+.btn-download-full {
+  width: 100%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 11px 16px;
-  font-size: 0.9rem;
+  padding: 13px 20px;
+  font-size: 0.95rem;
   font-weight: 600;
   font-family: inherit;
-  border-radius: var(--radius-btn);
-  border: 1.5px solid transparent;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  user-select: none;
-}
-
-.btn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.btn-primary {
   background: var(--primary-btn);
   color: #ffffff;
+  border-radius: var(--radius-btn);
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(15, 23, 42, 0.12);
+  transition: background 0.15s ease, opacity 0.15s ease, transform 0.1s ease;
 }
 
-.btn-primary:not(:disabled):hover {
+.btn-download-full:not(:disabled):hover {
   background: var(--primary-btn-hover);
 }
 
-/* Generate Another Button - Distinct Modern Blue */
-.btn-generate-another {
-  background: #2563eb;
-  color: #ffffff;
-  border-color: #2563eb;
-  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.2);
+.btn-download-full:not(:disabled):active {
+  transform: scale(0.99);
 }
 
-.btn-generate-another:not(:disabled):hover {
-  background: #1d4ed8;
-  border-color: #1d4ed8;
-  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
+.btn-download-full:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: none;
 }
 
 /* Footer */

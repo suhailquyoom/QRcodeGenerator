@@ -4,16 +4,18 @@
 
 const qrForm = document.getElementById("qrForm");
 const upiIdInput = document.getElementById("upiId");
+const amountInput = document.getElementById("amount");
 const clearBtn = document.getElementById("clearBtn");
 const qrcodeBox = document.getElementById("qrcode");
 const upiDisplay = document.getElementById("upiDisplay");
 const upiText = document.getElementById("upiText");
+const amountBadge = document.getElementById("amountBadge");
 const copyUpiBtn = document.getElementById("copyUpiBtn");
 const downloadBtn = document.getElementById("downloadBtn");
-const generateAnotherBtn = document.getElementById("generateAnotherBtn");
 const toast = document.getElementById("toast");
 
 let currentUpi = "";
+let currentAmount = "";
 let toastTimer = null;
 
 // Show Toast Notification
@@ -26,18 +28,22 @@ function showToast(message) {
   }, 2200);
 }
 
-// Build standard UPI URI
-function getUpiUri(upiId) {
-  return `upi://pay?pa=${encodeURIComponent(upiId)}&cu=INR`;
+// Build standard UPI URI with optional amount
+function getUpiUri(upiId, amount) {
+  let uri = `upi://pay?pa=${encodeURIComponent(upiId)}&cu=INR`;
+  if (amount && parseFloat(amount) > 0) {
+    uri += `&am=${parseFloat(amount).toFixed(2)}`;
+  }
+  return uri;
 }
 
 // Reset state to empty placeholder
 function resetToPlaceholder() {
   currentUpi = "";
+  currentAmount = "";
   clearBtn.classList.add("hidden");
   upiDisplay.classList.add("hidden");
   downloadBtn.disabled = true;
-  generateAnotherBtn.disabled = true;
 
   qrcodeBox.innerHTML = `
     <div class="placeholder">
@@ -56,9 +62,10 @@ function resetToPlaceholder() {
   `;
 }
 
-// Generate QR Code from input and clear the text box
+// Generate QR Code from inputs and clear the text boxes
 function generateQr() {
   const upiId = upiIdInput.value.trim();
+  const amt = amountInput.value.trim();
 
   if (!upiId) {
     upiIdInput.focus();
@@ -67,17 +74,25 @@ function generateQr() {
   }
 
   currentUpi = upiId;
-  const uri = getUpiUri(currentUpi);
+  currentAmount = (amt && parseFloat(amt) > 0) ? parseFloat(amt).toFixed(2) : "";
 
-  // Clear the input text box as requested after generating QR
+  const uri = getUpiUri(currentUpi, currentAmount);
+
+  // Clear inputs right after generating so user gets clean boxes
   upiIdInput.value = "";
+  amountInput.value = "";
   clearBtn.classList.add("hidden");
 
-  // Display the generated UPI ID badge & enable actions
+  // Display the generated UPI ID badge & amount badge
   upiText.textContent = currentUpi;
+  if (currentAmount) {
+    amountBadge.textContent = `₹${parseFloat(currentAmount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`;
+    amountBadge.classList.remove("hidden");
+  } else {
+    amountBadge.classList.add("hidden");
+  }
   upiDisplay.classList.remove("hidden");
   downloadBtn.disabled = false;
-  generateAnotherBtn.disabled = false;
 
   // Render QR Code
   qrcodeBox.innerHTML = "";
@@ -99,7 +114,7 @@ function generateQr() {
   showToast("QR Code generated");
 }
 
-// Form submit (clicking "Generate" or pressing Enter)
+// Form submit (clicking "Generate QR" or pressing Enter)
 qrForm.addEventListener("submit", (e) => {
   e.preventDefault();
   generateQr();
@@ -121,15 +136,6 @@ clearBtn.addEventListener("click", () => {
   upiIdInput.focus();
 });
 
-// "Generate Another" button: resets QR preview and focuses input
-generateAnotherBtn.addEventListener("click", () => {
-  resetToPlaceholder();
-  upiIdInput.value = "";
-  clearBtn.classList.add("hidden");
-  upiIdInput.focus();
-  showToast("Enter new UPI ID");
-});
-
 // Copy raw UPI ID from the badge below QR
 copyUpiBtn.addEventListener("click", async () => {
   if (!currentUpi) return;
@@ -142,52 +148,97 @@ copyUpiBtn.addEventListener("click", async () => {
   }
 });
 
-// Download clean high-res PNG
+// Robust cross-platform file download for mobile & desktop
+function triggerDownload(canvas, filename) {
+  if (canvas.toBlob) {
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.style.display = "none";
+      link.href = blobUrl;
+      link.download = filename;
+
+      document.body.appendChild(link);
+      link.click();
+
+      setTimeout(() => {
+        if (link.parentNode) {
+          document.body.removeChild(link);
+        }
+        URL.revokeObjectURL(blobUrl);
+      }, 1000);
+    }, "image/png");
+  } else {
+    const dataUrl = canvas.toDataURL("image/png");
+    const link = document.createElement("a");
+    link.style.display = "none";
+    link.href = dataUrl;
+    link.download = filename;
+
+    document.body.appendChild(link);
+    link.click();
+
+    setTimeout(() => {
+      if (link.parentNode) {
+        document.body.removeChild(link);
+      }
+    }, 1000);
+  }
+}
+
+// Download QR Code & immediately reset to fresh site
 downloadBtn.addEventListener("click", () => {
   if (!currentUpi) return;
 
-  const qrCanvas = qrcodeBox.querySelector("canvas");
-  const qrImg = qrcodeBox.querySelector("img");
-
-  const saveCanvas = (source) => {
-    const size = 480;
-    const padding = 40;
-    const canvas = document.createElement("canvas");
-    canvas.width = size;
-    canvas.height = size;
-    const ctx = canvas.getContext("2d");
-
-    // Clean white background
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, size, size);
-
-    // Centered QR Code
-    ctx.drawImage(source, padding, padding, size - padding * 2, size - padding * 2);
-
-    // Save PNG
-    const link = document.createElement("a");
-    const cleanId = currentUpi.replace(/[^a-zA-Z0-9]/g, "_");
-    link.download = `upi-qr-${cleanId}.png`;
-    link.href = canvas.toDataURL("image/png");
-    link.click();
-    showToast("Downloaded QR Code");
-  };
-
-  if (qrImg && qrImg.src && qrImg.src.startsWith("data:image")) {
-    const img = new Image();
-    img.onload = () => saveCanvas(img);
-    img.src = qrImg.src;
-  } else if (qrCanvas && qrCanvas.width > 0) {
-    saveCanvas(qrCanvas);
+  // Retrieve canvas or img element synchronously from container
+  const source = qrcodeBox.querySelector("canvas") || qrcodeBox.querySelector("img");
+  if (!source) {
+    showToast("QR code not ready");
+    return;
   }
+
+  // Generate crisp 512x512 canvas with clean margins
+  const size = 512;
+  const padding = 40;
+  const exportCanvas = document.createElement("canvas");
+  exportCanvas.width = size;
+  exportCanvas.height = size;
+  const ctx = exportCanvas.getContext("2d");
+
+  // Pure white background
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, size, size);
+
+  // Draw QR code centered
+  ctx.drawImage(source, padding, padding, size - padding * 2, size - padding * 2);
+
+  const cleanId = currentUpi.replace(/[^a-zA-Z0-9]/g, "_");
+  const filename = `upi-qr-${cleanId}.png`;
+
+  // Trigger mobile-safe download
+  triggerDownload(exportCanvas, filename);
+
+  // Immediately wipe the site clean to fresh state!
+  resetToPlaceholder();
+  upiIdInput.value = "";
+  amountInput.value = "";
+  clearBtn.classList.add("hidden");
+  upiIdInput.focus();
+  showToast("Downloaded! Screen cleared for next QR");
 });
 
 // Initialize on Load
 window.addEventListener("DOMContentLoaded", () => {
   const params = new URLSearchParams(window.location.search);
   const upiFromUrl = params.get("upi") || params.get("pa");
+  const amtFromUrl = params.get("am") || params.get("amount");
+
   if (upiFromUrl) {
     upiIdInput.value = upiFromUrl.trim();
+    if (amtFromUrl) {
+      amountInput.value = amtFromUrl.trim();
+    }
     generateQr();
   } else {
     resetToPlaceholder();
