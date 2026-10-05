@@ -288,41 +288,18 @@ body {
   background: var(--primary-btn-hover);
 }
 
-.btn-secondary {
-  background: var(--secondary-btn);
-  color: var(--text-primary);
-  border-color: var(--border);
+/* Generate Another Button - Distinct Modern Blue */
+.btn-generate-another {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.2);
 }
 
-.btn-secondary:not(:disabled):hover {
-  background: var(--secondary-btn-hover);
-  border-color: #cbd5e1;
-}
-
-/* Quick Action: Generate Another UPI */
-.btn-new-qr {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  width: 100%;
-  margin-top: 10px;
-  padding: 10px 14px;
-  background: transparent;
-  border: 1px dashed var(--border);
-  border-radius: var(--radius-btn);
-  color: var(--text-secondary);
-  font-size: 0.85rem;
-  font-weight: 600;
-  font-family: inherit;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.btn-new-qr:hover {
-  background: #f1f5f9;
-  color: var(--text-primary);
-  border-color: #cbd5e1;
+.btn-generate-another:not(:disabled):hover {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
 }
 
 /* Footer */

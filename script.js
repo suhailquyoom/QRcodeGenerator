@@ -10,11 +10,10 @@ const upiDisplay = document.getElementById("upiDisplay");
 const upiText = document.getElementById("upiText");
 const copyUpiBtn = document.getElementById("copyUpiBtn");
 const downloadBtn = document.getElementById("downloadBtn");
-const copyLinkBtn = document.getElementById("copyLinkBtn");
-const newQrBtn = document.getElementById("newQrBtn");
+const generateAnotherBtn = document.getElementById("generateAnotherBtn");
 const toast = document.getElementById("toast");
 
-let debounceTimer = null;
+let currentUpi = "";
 let toastTimer = null;
 
 // Show Toast Notification
@@ -34,11 +33,11 @@ function getUpiUri(upiId) {
 
 // Reset state to empty placeholder
 function resetToPlaceholder() {
+  currentUpi = "";
   clearBtn.classList.add("hidden");
   upiDisplay.classList.add("hidden");
-  newQrBtn.classList.add("hidden");
   downloadBtn.disabled = true;
-  copyLinkBtn.disabled = true;
+  generateAnotherBtn.disabled = true;
 
   qrcodeBox.innerHTML = `
     <div class="placeholder">
@@ -57,25 +56,31 @@ function resetToPlaceholder() {
   `;
 }
 
-// Render QR Code dynamically
-function render() {
+// Generate QR Code from input and clear the text box
+function generateQr() {
   const upiId = upiIdInput.value.trim();
 
   if (!upiId) {
-    resetToPlaceholder();
+    upiIdInput.focus();
+    showToast("Please enter a UPI ID");
     return;
   }
 
-  clearBtn.classList.remove("hidden");
-  upiText.textContent = upiId;
+  currentUpi = upiId;
+  const uri = getUpiUri(currentUpi);
+
+  // Clear the input text box as requested after generating QR
+  upiIdInput.value = "";
+  clearBtn.classList.add("hidden");
+
+  // Display the generated UPI ID badge & enable actions
+  upiText.textContent = currentUpi;
   upiDisplay.classList.remove("hidden");
-  newQrBtn.classList.remove("hidden");
   downloadBtn.disabled = false;
-  copyLinkBtn.disabled = false;
+  generateAnotherBtn.disabled = false;
 
-  const uri = getUpiUri(upiId);
+  // Render QR Code
   qrcodeBox.innerHTML = "";
-
   if (window.QRCode) {
     try {
       new QRCode(qrcodeBox, {
@@ -90,75 +95,56 @@ function render() {
       console.error("QR Code generation error:", err);
     }
   }
+
+  showToast("QR Code generated");
 }
 
-// Form submit (e.g. pressing Enter or clicking "Generate")
+// Form submit (clicking "Generate" or pressing Enter)
 qrForm.addEventListener("submit", (e) => {
   e.preventDefault();
-  render();
-  if (!upiIdInput.value.trim()) {
-    upiIdInput.focus();
-  }
+  generateQr();
 });
 
-// Real-time live generation as the user types
+// Show/hide clear button as user types
 upiIdInput.addEventListener("input", () => {
-  clearTimeout(debounceTimer);
-  debounceTimer = setTimeout(render, 120);
-});
-
-// Auto-select text on click/focus so typing immediately replaces previous ID
-upiIdInput.addEventListener("focus", () => {
-  if (upiIdInput.value) {
-    upiIdInput.select();
+  if (upiIdInput.value.trim()) {
+    clearBtn.classList.remove("hidden");
+  } else {
+    clearBtn.classList.add("hidden");
   }
 });
 
 // Clear button inside input
 clearBtn.addEventListener("click", () => {
   upiIdInput.value = "";
-  render();
+  clearBtn.classList.add("hidden");
   upiIdInput.focus();
 });
 
-// Generate for another UPI button
-newQrBtn.addEventListener("click", () => {
+// "Generate Another" button: resets QR preview and focuses input
+generateAnotherBtn.addEventListener("click", () => {
+  resetToPlaceholder();
   upiIdInput.value = "";
-  render();
+  clearBtn.classList.add("hidden");
   upiIdInput.focus();
-  showToast("Ready for new UPI ID");
+  showToast("Enter new UPI ID");
 });
 
-// Copy raw UPI ID
+// Copy raw UPI ID from the badge below QR
 copyUpiBtn.addEventListener("click", async () => {
-  const upiId = upiIdInput.value.trim();
-  if (!upiId) return;
+  if (!currentUpi) return;
 
   try {
-    await navigator.clipboard.writeText(upiId);
-    showToast(`Copied: ${upiId}`);
+    await navigator.clipboard.writeText(currentUpi);
+    showToast(`Copied: ${currentUpi}`);
   } catch {
     showToast("Failed to copy");
   }
 });
 
-// Copy UPI payment link
-copyLinkBtn.addEventListener("click", async () => {
-  const upiId = upiIdInput.value.trim();
-  if (!upiId) return;
-
-  try {
-    await navigator.clipboard.writeText(getUpiUri(upiId));
-    showToast("Copied UPI payment link");
-  } catch {
-    showToast("Failed to copy link");
-  }
-});
-
 // Download clean high-res PNG
 downloadBtn.addEventListener("click", () => {
-  const upiId = upiIdInput.value.trim();
-  if (!upiId) return;
+  if (!currentUpi) return;
 
   const qrCanvas = qrcodeBox.querySelector("canvas");
   const qrImg = qrcodeBox.querySelector("img");
@@ -180,7 +166,7 @@ downloadBtn.addEventListener("click", () => {
 
     // Save PNG
     const link = document.createElement("a");
-    const cleanId = upiId.replace(/[^a-zA-Z0-9]/g, "_");
+    const cleanId = currentUpi.replace(/[^a-zA-Z0-9]/g, "_");
     link.download = `upi-qr-${cleanId}.png`;
     link.href = canvas.toDataURL("image/png");
     link.click();
@@ -202,7 +188,9 @@ window.addEventListener("DOMContentLoaded", () => {
   const upiFromUrl = params.get("upi") || params.get("pa");
   if (upiFromUrl) {
     upiIdInput.value = upiFromUrl.trim();
+    generateQr();
+  } else {
+    resetToPlaceholder();
+    upiIdInput.focus();
   }
-  render();
-  upiIdInput.focus();
 });
