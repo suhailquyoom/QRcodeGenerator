@@ -1,9 +1,9 @@
-const CACHE_NAME = "upi-qr-pwa-v6";
+const CACHE_NAME = "upi-qr-pwa-v7";
 const ASSETS = [
   "/",
   "/index.html",
-  "/style.css?v=6",
-  "/script.js?v=6",
+  "/style.css?v=7",
+  "/script.js?v=7",
   "/qrcode.min.js",
   "/manifest.json",
   "/icon-192.png",
