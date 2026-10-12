@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Minimal & Clean UPI QR Code Generator
+   Minimal & Clean UPI QR Code Generator (Auto-Live & Fullscreen PWA)
    ========================================================================== */
 
 :root {
@@ -12,8 +12,8 @@
   --border-focus: #0f172a;
   --primary-btn: #0f172a;
   --primary-btn-hover: #1e293b;
-  --secondary-btn: #ffffff;
-  --secondary-btn-hover: #f1f5f9;
+  --secondary-btn: #f1f5f9;
+  --secondary-btn-hover: #e2e8f0;
   --shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
   --radius-card: 16px;
   --radius-input: 10px;
@@ -32,10 +32,11 @@ body {
   background-color: var(--bg);
   color: var(--text-primary);
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px 16px;
+  padding: 18px 16px;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -48,20 +49,48 @@ body {
 /* Header */
 .header {
   text-align: center;
-  margin-bottom: 24px;
+  margin-bottom: 18px;
+}
+
+.header-top {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .header h1 {
-  font-size: 1.5rem;
+  font-size: 1.42rem;
   font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--text-primary);
 }
 
 .header p {
-  font-size: 0.9rem;
+  font-size: 0.86rem;
   color: var(--text-secondary);
-  margin-top: 6px;
+  margin-top: 5px;
+}
+
+.btn-install {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  font-family: inherit;
+  color: #047857;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-install:hover {
+  background: #d1fae5;
 }
 
 /* Card */
@@ -69,7 +98,7 @@ body {
   background: var(--card-bg);
   border: 1px solid var(--border);
   border-radius: var(--radius-card);
-  padding: 28px 24px;
+  padding: 22px 20px;
   box-shadow: var(--shadow);
 }
 
@@ -83,7 +112,6 @@ body {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin-bottom: 12px;
   width: 100%;
 }
 
@@ -121,7 +149,7 @@ body {
 .input-box input {
   width: 100%;
   padding: 12px 36px 12px 14px;
-  font-size: 0.95rem;
+  font-size: 0.96rem;
   font-family: inherit;
   color: var(--text-primary);
   background: #ffffff;
@@ -152,7 +180,7 @@ body {
   border: none;
   color: var(--text-muted);
   cursor: pointer;
-  padding: 4px;
+  padding: 5px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -166,42 +194,18 @@ body {
   background: #f1f5f9;
 }
 
-.btn-generate {
-  width: 100%;
-  background: var(--primary-btn);
-  color: #ffffff;
-  font-family: inherit;
-  font-size: 0.92rem;
-  font-weight: 600;
-  padding: 12px 18px;
-  border-radius: var(--radius-input);
-  border: none;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.15s ease, opacity 0.15s ease, transform 0.1s ease;
-}
-
-.btn-generate:hover {
-  background: var(--primary-btn-hover);
-}
-
-.btn-generate:active {
-  transform: scale(0.99);
-}
-
 /* UPI & Amount Display (Positioned ABOVE the QR code) */
 .upi-display {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  margin-top: 14px;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
   padding: 8px 14px;
   background: #f8fafc;
   border: 1px solid var(--border);
   border-radius: 10px;
-  animation: fadeIn 0.2s ease-in-out;
+  animation: fadeIn 0.18s ease-out;
 }
 
 .upi-info-row {
@@ -221,7 +225,7 @@ body {
 }
 
 .amount-badge {
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-weight: 700;
   color: #047857;
   background: #ecfdf5;
@@ -250,7 +254,7 @@ body {
   background: #e2e8f0;
 }
 
-/* QR Code Container */
+/* QR Code Container (High contrast, scan-optimized) */
 .qr-wrapper {
   display: flex;
   justify-content: center;
@@ -258,8 +262,8 @@ body {
 }
 
 .qrcode {
-  width: 240px;
-  height: 240px;
+  width: 248px;
+  height: 248px;
   background: #ffffff;
   border: 1px solid var(--border);
   border-radius: var(--radius-input);
@@ -302,18 +306,21 @@ body {
   color: var(--text-secondary);
 }
 
-/* Action Button directly below QR Code */
+/* Action Buttons directly below QR Code */
 .actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   width: 100%;
 }
 
 .btn-download-full {
-  width: 100%;
+  flex: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 13px 20px;
+  padding: 13px 18px;
   font-size: 0.95rem;
   font-weight: 600;
   font-family: inherit;
@@ -340,11 +347,36 @@ body {
   box-shadow: none;
 }
 
+.btn-reset {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 13px 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-family: inherit;
+  background: var(--secondary-btn);
+  color: var(--text-primary);
+  border-radius: var(--radius-btn);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.btn-reset:hover {
+  background: var(--secondary-btn-hover);
+}
+
+.btn-reset:active {
+  transform: scale(0.98);
+}
+
 /* Footer */
 .footer {
   text-align: center;
-  margin-top: 20px;
-  font-size: 0.8rem;
+  margin-top: 16px;
+  font-size: 0.78rem;
   color: var(--text-muted);
 }
 

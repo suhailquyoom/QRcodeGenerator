@@ -2,11 +2,18 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>UPI QR Code Generator</title>
-  <meta name="description" content="Clean and simple UPI QR Code Generator. Enter a UPI ID and amount to generate a payment QR code instantly.">
-  <link rel="stylesheet" href="style.css?v=5">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+  <meta name="description" content="Instant UPI to QR Code converter for Digital Rupee and UPI apps. Auto-generates QR as you paste.">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="UPI QR">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+  <link rel="stylesheet" href="style.css?v=6">
 </head>
 <body>
   <!-- Toast notification banner at the top -->
@@ -14,15 +21,24 @@
 
   <div class="container">
     <header class="header">
-      <h1>UPI QR Code Generator</h1>
-      <p>Enter your UPI ID to generate a payment QR code</p>
+      <div class="header-top">
+        <h1>UPI QR Code Generator</h1>
+        <button type="button" id="installPwaBtn" class="btn-install hidden" title="Install as fullscreen app">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+            <line x1="12" y1="18" x2="12.01" y2="18"></line>
+          </svg>
+          Install App
+        </button>
+      </div>
+      <p>Paste UPI ID &amp; amount — QR generates automatically</p>
     </header>
 
     <main class="card">
-      <!-- UPI & Optional Amount Form -->
+      <!-- Live Auto-Generating UPI & Amount Inputs (No Generate Button Needed) -->
       <form id="qrForm" class="input-form" autocomplete="off" onsubmit="event.preventDefault();">
         <div class="form-inputs">
-          <!-- UPI ID Input with Clear Button -->
+          <!-- UPI ID Input -->
           <div class="input-box upi-box">
             <input 
               type="text" 
@@ -30,6 +46,7 @@
               placeholder="UPI ID (e.g. name@bank)" 
               autocomplete="off" 
               spellcheck="false" 
+              enterkeyhint="next"
               autofocus
             >
             <button type="button" id="clearBtn" class="clear-btn hidden" title="Clear UPI ID" aria-label="Clear UPI ID">
@@ -50,6 +67,7 @@
               inputmode="decimal" 
               autocomplete="off" 
               spellcheck="false"
+              enterkeyhint="done"
             >
             <button type="button" id="clearAmountBtn" class="clear-btn hidden" title="Clear amount" aria-label="Clear amount">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -59,8 +77,6 @@
             </button>
           </div>
         </div>
-
-        <button type="submit" id="generateBtn" class="btn-generate">Generate QR</button>
       </form>
 
       <!-- Above-QR UPI & Exact Amount Info Row -->
@@ -94,12 +110,12 @@
               <path d="M7 7h.01"></path>
               <path d="M7 17h.01"></path>
             </svg>
-            <span>Enter UPI ID above</span>
+            <span>Paste UPI ID above</span>
           </div>
         </div>
       </div>
 
-      <!-- Action Button directly under QR -->
+      <!-- Action Buttons directly under QR -->
       <div class="actions">
         <button type="button" id="downloadBtn" class="btn-download-full" disabled>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -109,15 +125,23 @@
           </svg>
           Download QR
         </button>
+        <button type="button" id="resetAllBtn" class="btn-reset hidden" title="Clear for next order">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 6h18"></path>
+            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+          </svg>
+          Next
+        </button>
       </div>
     </main>
 
     <footer class="footer">
-      <p>Clean &amp; Private • Generated client-side</p>
+      <p>Clean &amp; Private • Instant Live QR</p>
     </footer>
   </div>
 
   <script src="qrcode.min.js"></script>
-  <script src="script.js?v=5"></script>
+  <script src="script.js?v=6"></script>
 </body>
 </html>
