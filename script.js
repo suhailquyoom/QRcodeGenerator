@@ -6,11 +6,14 @@ const qrForm = document.getElementById("qrForm");
 const upiIdInput = document.getElementById("upiId");
 const amountInput = document.getElementById("amount");
 const clearBtn = document.getElementById("clearBtn");
+const clearAmountBtn = document.getElementById("clearAmountBtn");
 const qrcodeBox = document.getElementById("qrcode");
 const upiDisplay = document.getElementById("upiDisplay");
 const upiText = document.getElementById("upiText");
 const amountBadge = document.getElementById("amountBadge");
 const copyUpiBtn = document.getElementById("copyUpiBtn");
+const copyIcon = document.getElementById("copyIcon");
+const checkIcon = document.getElementById("checkIcon");
 const downloadBtn = document.getElementById("downloadBtn");
 const toast = document.getElementById("toast");
 
@@ -18,17 +21,17 @@ let currentUpi = "";
 let currentAmount = "";
 let toastTimer = null;
 
-// Show Toast Notification
+// Show Toast Notification (Top floating banner)
 function showToast(message) {
   clearTimeout(toastTimer);
   toast.textContent = message;
   toast.classList.remove("hidden");
   toastTimer = setTimeout(() => {
     toast.classList.add("hidden");
-  }, 2200);
+  }, 2400);
 }
 
-// Build standard UPI URI with optional amount
+// Build standard UPI URI with optional amount (NPCI standard)
 function getUpiUri(upiId, amount) {
   let uri = `upi://pay?pa=${encodeURIComponent(upiId)}&cu=INR`;
   if (amount && parseFloat(amount) > 0) {
@@ -42,6 +45,7 @@ function resetToPlaceholder() {
   currentUpi = "";
   currentAmount = "";
   clearBtn.classList.add("hidden");
+  if (clearAmountBtn) clearAmountBtn.classList.add("hidden");
   upiDisplay.classList.add("hidden");
   downloadBtn.disabled = true;
 
@@ -62,10 +66,64 @@ function resetToPlaceholder() {
   `;
 }
 
-// Generate QR Code from inputs and clear the text boxes
+// Sanitize amount: remove commas, currency symbols, extra spaces, keep only digits and 1 dot
+function sanitizeAmount(raw) {
+  if (!raw) return "";
+  let clean = raw.replace(/[^0-9.]/g, "");
+  const parts = clean.split(".");
+  if (parts.length > 2) {
+    clean = parts[0] + "." + parts.slice(1).join("");
+  }
+  return clean;
+}
+
+// Amount input events: enable keyboard auto-suggest & clipboard paste
+function handleAmountInput() {
+  const sanitized = sanitizeAmount(amountInput.value);
+  if (amountInput.value !== sanitized) {
+    amountInput.value = sanitized;
+  }
+  if (amountInput.value.trim()) {
+    clearAmountBtn.classList.remove("hidden");
+  } else {
+    clearAmountBtn.classList.add("hidden");
+  }
+}
+
+amountInput.addEventListener("input", handleAmountInput);
+
+amountInput.addEventListener("paste", (e) => {
+  // Allow immediate paste from mobile keyboard suggestions or clipboard
+  setTimeout(() => {
+    handleAmountInput();
+  }, 0);
+});
+
+clearAmountBtn.addEventListener("click", () => {
+  amountInput.value = "";
+  clearAmountBtn.classList.add("hidden");
+  amountInput.focus();
+});
+
+// UPI ID input events
+upiIdInput.addEventListener("input", () => {
+  if (upiIdInput.value.trim()) {
+    clearBtn.classList.remove("hidden");
+  } else {
+    clearBtn.classList.add("hidden");
+  }
+});
+
+clearBtn.addEventListener("click", () => {
+  upiIdInput.value = "";
+  clearBtn.classList.add("hidden");
+  upiIdInput.focus();
+});
+
+// Generate QR Code
 function generateQr() {
   const upiId = upiIdInput.value.trim();
-  const amt = amountInput.value.trim();
+  const amtRaw = sanitizeAmount(amountInput.value.trim());
 
   if (!upiId) {
     upiIdInput.focus();
@@ -73,8 +131,16 @@ function generateQr() {
     return;
   }
 
+  // Validate format basic check
+  if (!upiId.includes("@")) {
+    showToast("Please enter a valid UPI ID (e.g. name@bank)");
+    upiIdInput.focus();
+    return;
+  }
+
   currentUpi = upiId;
-  currentAmount = (amt && parseFloat(amt) > 0) ? parseFloat(amt).toFixed(2) : "";
+  const numAmt = parseFloat(amtRaw);
+  currentAmount = (!isNaN(numAmt) && numAmt > 0) ? numAmt.toFixed(2) : "";
 
   const uri = getUpiUri(currentUpi, currentAmount);
 
@@ -82,11 +148,16 @@ function generateQr() {
   upiIdInput.value = "";
   amountInput.value = "";
   clearBtn.classList.add("hidden");
+  clearAmountBtn.classList.add("hidden");
 
-  // Display the generated UPI ID badge & amount badge
+  // Display the generated UPI ID badge & amount badge (ABOVE the QR code)
   upiText.textContent = currentUpi;
   if (currentAmount) {
-    amountBadge.textContent = `₹${parseFloat(currentAmount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`;
+    const formatted = parseFloat(currentAmount).toLocaleString("en-IN", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+    amountBadge.textContent = `₹${formatted}`;
     amountBadge.classList.remove("hidden");
   } else {
     amountBadge.classList.add("hidden");
@@ -108,47 +179,42 @@ function generateQr() {
       });
     } catch (err) {
       console.error("QR Code generation error:", err);
+      showToast("Error generating QR Code");
     }
   }
 
-  showToast("QR Code generated");
+  // Notice: Redundant "QR Code generated" black toast is deliberately removed!
+  // The QR code appears right on screen without distracting black toast popups.
 }
 
-// Form submit (clicking "Generate QR" or pressing Enter)
+// Form submit
 qrForm.addEventListener("submit", (e) => {
   e.preventDefault();
   generateQr();
 });
 
-// Show/hide clear button as user types
-upiIdInput.addEventListener("input", () => {
-  if (upiIdInput.value.trim()) {
-    clearBtn.classList.remove("hidden");
-  } else {
-    clearBtn.classList.add("hidden");
-  }
-});
-
-// Clear button inside input
-clearBtn.addEventListener("click", () => {
-  upiIdInput.value = "";
-  clearBtn.classList.add("hidden");
-  upiIdInput.focus();
-});
-
-// Copy raw UPI ID from the badge below QR
+// Copy raw UPI ID from the badge above QR
 copyUpiBtn.addEventListener("click", async () => {
   if (!currentUpi) return;
 
   try {
     await navigator.clipboard.writeText(currentUpi);
+    // Instant visual feedback on button
+    if (copyIcon && checkIcon) {
+      copyIcon.classList.add("hidden");
+      checkIcon.classList.remove("hidden");
+      setTimeout(() => {
+        copyIcon.classList.remove("hidden");
+        checkIcon.classList.add("hidden");
+      }, 1500);
+    }
     showToast(`Copied: ${currentUpi}`);
   } catch {
-    showToast("Failed to copy");
+    showToast("Failed to copy UPI ID");
   }
 });
 
-// Robust cross-platform file download for mobile & desktop
+// Cross-platform file download
 function triggerDownload(canvas, filename) {
   if (canvas.toBlob) {
     canvas.toBlob((blob) => {
@@ -187,11 +253,10 @@ function triggerDownload(canvas, filename) {
   }
 }
 
-// Download QR Code & immediately reset to fresh site
+// Download QR Code & reset
 downloadBtn.addEventListener("click", () => {
   if (!currentUpi) return;
 
-  // Retrieve canvas or img element synchronously from container
   const source = qrcodeBox.querySelector("canvas") || qrcodeBox.querySelector("img");
   if (!source) {
     showToast("QR code not ready");
@@ -216,14 +281,14 @@ downloadBtn.addEventListener("click", () => {
   const cleanId = currentUpi.replace(/[^a-zA-Z0-9]/g, "_");
   const filename = `upi-qr-${cleanId}.png`;
 
-  // Trigger mobile-safe download
   triggerDownload(exportCanvas, filename);
 
-  // Immediately wipe the site clean to fresh state!
+  // Reset to fresh state for next QR
   resetToPlaceholder();
   upiIdInput.value = "";
   amountInput.value = "";
   clearBtn.classList.add("hidden");
+  clearAmountBtn.classList.add("hidden");
   upiIdInput.focus();
   showToast("Downloaded! Screen cleared for next QR");
 });
